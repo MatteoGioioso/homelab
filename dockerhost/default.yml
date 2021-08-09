@@ -8,5 +8,6 @@ sys_packages: [
   'apt-transport-https',
   'software-properties-common',
   'jq',
-  'bridge-utils'
+  'bridge-utils',
+  'unattended-upgrades'
 ]

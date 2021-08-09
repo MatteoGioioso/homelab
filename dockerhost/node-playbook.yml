@@ -52,6 +52,15 @@
     - name: Install required system packages
       apt: name={{ sys_packages }} state=latest
 
+    - name: Enable unattended upgrades
+      command:
+        cmd: dpkg-reconfigure -f noninteractive unattended-upgrades
+        creates: /etc/apt/apt.conf.d/20auto-upgrades
+
+    # Resize disk
+    - name: Resize partition
+      command:
+        cmd: lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv && resize2fs /dev/ubuntu-vg/ubuntu-lv
 
     # Install docker
     - name: Add Docker GPG apt Key
