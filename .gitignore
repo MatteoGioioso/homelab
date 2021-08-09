@@ -15,3 +15,4 @@
 # vendor/
 .idea
 .vagrant
+dockerhost/hosts.ini
