@@ -16,3 +16,4 @@
 .idea
 .vagrant
 dockerhost/hosts.ini
+kubernetes-cluster/vms/hosts.ini

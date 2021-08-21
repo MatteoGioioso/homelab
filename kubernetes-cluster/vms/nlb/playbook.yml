@@ -1,0 +1,25 @@
+# Base installation for every node
+---
+- hosts: all
+  become: true
+  vars:
+    haproxy_ip: {{ node_ip }}
+    master_1_hostname: "kworker1"
+    master_1_ip: "192.168.0.201"
+    master_2_hostname: "kworker2"
+    master_2_ip: "192.168.0.202"
+  vars_files:
+    - default.yml
+
+  tasks:
+    # Install Packages for HaProxy
+    - name: Update apt
+      apt: update_cache=yes
+
+    - name: Install required system packages
+      apt: name={{ sys_packages }} state=latest
+
+    - name: Copy haproxy config
+      template:
+        src: haproxy.cfg.j2
+        dest: "/etc/haproxy/haproxy.cfg"

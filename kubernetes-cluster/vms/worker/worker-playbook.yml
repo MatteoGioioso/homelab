@@ -1,49 +1,14 @@
 ---
 - hosts: all
   become: true
-  vars_files:
-    - default.yml
 
   tasks:
-  # Kubernetes worker installation ======================
-    - name: Add an apt signing key for Docker
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
 
-    - name: Add apt repository for stable version
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
-        state: present
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
 
-    - name: Install docker and its dependecies
-      apt:
-        name: "{{ packages }}"
-        state: present
-        update_cache: yes
-      vars:
-        packages:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-      notify:
-        - docker status
-
-    - name: Add vagrant user to docker group
-      user:
-        name: vagrant
-        group: docker
-    # Kubelet will not start if the system has swap enabled,
-    - name: Remove swapfile from /etc/fstab
-      mount:
-        name: "{{ item }}"
-        fstype: swap
-        state: absent
-      with_items:
-        - swap
-        - none
-
-    - name: Disable swap
-      command: swapoff -a
-      when: ansible_swaptotal_mb > 0
-
+  handlers:
+    - name: docker status
+      service: name=docker state=started

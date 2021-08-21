@@ -5,17 +5,56 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
 Vagrant.configure(2) do |config|
-  NodeCount = 1
+	LoadbalancerCount = 1
+  WorkerCount = 2
+  MasterCount = 2
+
+	# Kubernetes Master Nodes
+	(1..WorkerCount).each do |i|
+      ip = "192.168.0.21#{i}"
+      config.vm.define "kmaster#{i}" do |masternode|
+        masternode.vm.box = "peru/ubuntu-20.04-server-amd64"
+        masternode.vm.network :public_network, :dev => 'br0', :type => 'bridge', ip: ip
+        masternode.vm.hostname = "kmaster#{i}"
+        masternode.vm.provision "ansible-commons", type:'ansible' do |ansible|
+            ansible.playbook = "commons/playbook.yml"
+        end
+        masternode.vm.provision "k8s-commons", type:'ansible' do |ansible|
+            ansible.playbook = "k8s-commons/playbook.yml"
+            ansible.extra_vars = {
+								node_ip: ip,
+            }
+        end
+        masternode.vm.provider :libvirt do |v|
+            v.memory = 4096
+            v.cpus = 2
+            v.host = "homelab"
+            v.username = "madeo"
+            v.driver = "kvm"
+            v.connect_via_ssh = true
+            v.id_ssh_key_file = "/home/matteo/.ssh/id_rsa"
+            v.autostart = true
+        end
+      end
+    end
+
 
   # Kubernetes Worker Nodes
-  (1..NodeCount).each do |i|
-    ip = "192.168.0.21#{i}"
+  (1..MasterCount).each do |i|
+    ip = "192.168.0.20#{i}"
     config.vm.define "kworker#{i}" do |workernode|
       workernode.vm.hostname = "kworker#{i}"
       workernode.vm.box = "peru/ubuntu-20.04-server-amd64"
       workernode.vm.network :public_network, :dev => 'br0', :type => 'bridge', ip: ip
       workernode.vm.provision "ansible-commons", type:'ansible' do |ansible|
           ansible.playbook = "commons/playbook.yml"
+      end
+      workernode.vm.provision "k8s-commons", type:'ansible' do |ansible|
+          ansible.playbook = "k8s-commons/playbook.yml"
+          ansible.extra_vars = {
+              node_ip: ip,
+              master_1_ip: 192.168.0.211
+          }
       end
       workernode.vm.provider :libvirt do |v|
           v.memory = 4096
@@ -29,5 +68,34 @@ Vagrant.configure(2) do |config|
       end
     end
   end
+
+
+  (1..LoadbalancerCount).each do |i|
+        ip = "192.168.0.200"
+        config.vm.define "haproxy#{i}" do |loadbalancer|
+          loadbalancer.vm.box = "peru/ubuntu-20.04-server-amd64"
+          loadbalancer.vm.network :public_network, :dev => 'br0', :type => 'bridge', ip: ip
+          loadbalancer.vm.hostname = "haproxy#{i}"
+          loadbalancer.vm.provision "ansible-commons", type:'ansible' do |ansible|
+              ansible.playbook = "commons/playbook.yml"
+          end
+          loadbalancer.vm.provision "nlb", type:'ansible' do |ansible|
+              ansible.playbook = "nlb/playbook.yml"
+              ansible.extra_vars = {
+  								node_ip: ip,
+              }
+          end
+          loadbalancer.vm.provider :libvirt do |v|
+              v.memory = 1024
+              v.cpus = 1
+              v.host = "homelab"
+              v.username = "madeo"
+              v.driver = "kvm"
+              v.connect_via_ssh = true
+              v.id_ssh_key_file = "/home/matteo/.ssh/id_rsa"
+              v.autostart = true
+          end
+        end
+      end
 
 end
