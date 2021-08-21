@@ -42,7 +42,8 @@ backend k8s
 	balance roundrobin
 	mode tcp
 	option tcplog
-	option tcpcheck
-	server {{ master_1_hostname }} {{ master_1_ip }}
-	server {{ master_2_hostname }} {{ master_2_ip }}
+	option tcp-check
+	{% for node in masternodes %}
+	server {{ node.name }} {{ node.ip }}
+  {% endfor %}
 

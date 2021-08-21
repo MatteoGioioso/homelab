@@ -17,3 +17,4 @@
 .vagrant
 dockerhost/hosts.ini
 kubernetes-cluster/vms/hosts.ini
+kubernetes-cluster/vms/commons/secrets.yml

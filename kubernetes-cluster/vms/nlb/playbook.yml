@@ -1,13 +1,9 @@
-# Base installation for every node
 ---
 - hosts: all
   become: true
   vars:
-    haproxy_ip: {{ node_ip }}
-    master_1_hostname: "kworker1"
-    master_1_ip: "192.168.0.201"
-    master_2_hostname: "kworker2"
-    master_2_ip: "192.168.0.202"
+    haproxy_ip: "{{ node_ip }}"
+    masternodes: "{{ masternodes }}"
   vars_files:
     - default.yml
 
@@ -23,3 +19,8 @@
       template:
         src: haproxy.cfg.j2
         dest: "/etc/haproxy/haproxy.cfg"
+
+    - name: start haproxy
+      service:
+        name: "haproxy"
+        state: restarted

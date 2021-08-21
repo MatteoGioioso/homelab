@@ -1,4 +1,4 @@
 ---
-create_user: madeo
+create_user: k8s
 copy_local_key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
 sys_packages: [ 'curl', 'nano', 'git', 'ufw', 'apt-transport-https', 'software-properties-common', 'ca-certificates', 'gnupg-agent', 'jq', 'unattended-upgrades', 'net-tools']

@@ -4,6 +4,7 @@
   become: true
   vars_files:
     - default.yml
+    - secrets.yml
 
   tasks:
     - name: Install Prerequisites
@@ -22,8 +23,17 @@
         state: present
         groups: wheel
         append: true
+        password: "{{ user_password | password_hash('sha512', user_password_salt) }}"
         create_home: true
         shell: /bin/bash
+
+    - name: Add 'wheel' group to sudo
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) ALL'
+        validate: '/usr/sbin/visudo -cf %s'
 
     - name: Set authorized key for remote user
       authorized_key:
