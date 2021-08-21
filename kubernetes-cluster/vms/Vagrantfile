@@ -7,7 +7,8 @@ ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 Vagrant.configure(2) do |config|
 	LoadbalancerCount = 1
   WorkerCount = 0
-  MasterCount = 0
+  MasterCount = 1
+  MasterNodes = Array.new(2){|i| {name: "kworker#{i+1}", ip: "192.168.0.20#{i+1}"}}
 
 	# Kubernetes Master Nodes
 	(1..WorkerCount).each do |i|
@@ -50,7 +51,7 @@ Vagrant.configure(2) do |config|
           ansible.playbook = "commons/playbook.yml"
       end
       workernode.vm.provision "k8s-commons", type:'ansible' do |ansible|
-#           ansible.playbook = "k8s-commons/playbook.yml"
+          ansible.playbook = "k8s-commons/playbook.yml"
           ansible.extra_vars = {
               node_ip: ip,
           }
@@ -68,7 +69,7 @@ Vagrant.configure(2) do |config|
     end
   end
 
-
+	# Loadbalancer
   (1..LoadbalancerCount).each do |i|
         ip = "192.168.0.200"
         config.vm.define "haproxy#{i}" do |loadbalancer|
@@ -82,10 +83,7 @@ Vagrant.configure(2) do |config|
               ansible.playbook = "nlb/playbook.yml"
               ansible.extra_vars = {
   								node_ip: ip,
-                  masternodes: [
-                    {name: "kworker1", ip: "192.168.0.201"},
-                    {name: "kworker2", ip: "192.168.0.202"},
-                  ],
+                  masternodes: MasterNodes,
               }
           end
           loadbalancer.vm.provider :libvirt do |v|
