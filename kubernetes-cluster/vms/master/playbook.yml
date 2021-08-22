@@ -6,12 +6,12 @@
     - name: Initialize the Kubernetes cluster using kubeadm
       command: kubeadm init --control-plane-endpoint {{ loadbalancer_ip }}:{{ loadbalancer_port }} --upload-certs  --node-name {{ node_name }} --pod-network-cidr=192.168.0.0/16
 
-    - name: Setup kubeconfig for vagrant user
+    - name: Setup kubeconfig for k8s user
       command: "{{ item }}"
       with_items:
-        - mkdir -p /home/vagrant/.kube
-        - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
-        - chown vagrant:vagrant /home/vagrant/.kube/config
+        - mkdir -p /home/k8s/.kube
+        - cp -i /etc/kubernetes/admin.conf /home/k8s/.kube/config
+        - chown k8s:k8s /home/k8s/.kube/config
 
     - name: Install calico pod network
       become: false

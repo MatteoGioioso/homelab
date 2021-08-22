@@ -27,9 +27,9 @@
       notify:
         - docker status
 
-    - name: Add vagrant user to docker group
+    - name: Add k8s user to docker group
       user:
-        name: vagrant
+        name: k8s
         group: docker
 
 
@@ -73,7 +73,7 @@
     - name: Configure node ip
       lineinfile:
         path: /etc/default/kubelet
-        line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
+        line: KUBELET_EXTRA_ARGS="--node-ip={{ node_ip }} --cgroup-driver=cgroupfs"
         create: yes
 
     - name: Restart kubelet
