@@ -74,9 +74,14 @@
       lineinfile:
         path: /etc/default/kubelet
         line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
+        create: yes
 
     - name: Restart kubelet
       service:
         name: kubelet
         daemon_reload: yes
         state: restarted
+
+  handlers:
+    - name: docker status
+      service: name=docker state=started

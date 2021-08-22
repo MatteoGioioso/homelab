@@ -5,10 +5,12 @@ ENV['VAGRANT_NO_PARALLEL'] = 'yes'
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'libvirt'
 
 Vagrant.configure(2) do |config|
-	LoadbalancerCount = 1
+	LoadbalancerCount = 0
   WorkerCount = 0
   MasterCount = 1
   MasterNodes = Array.new(2){|i| {name: "kworker#{i+1}", ip: "192.168.0.20#{i+1}"}}
+  loadbalancer_ip = "192.168.0.200"
+  loadbalancer_port = "6443"
 
 	# Kubernetes Master Nodes
 	(1..WorkerCount).each do |i|
@@ -25,6 +27,9 @@ Vagrant.configure(2) do |config|
             ansible.extra_vars = {
 								node_ip: ip,
             }
+        end
+        masternode.vm.provision "worker", type:'ansible' do |ansible|
+            ansible.playbook = "worker/playbook.yml"
         end
         masternode.vm.provider :libvirt do |v|
             v.memory = 4096
@@ -56,6 +61,14 @@ Vagrant.configure(2) do |config|
               node_ip: ip,
           }
       end
+      workernode.vm.provision "master", type:'ansible' do |ansible|
+          ansible.playbook = "master/playbook.yml"
+          ansible.extra_vars = {
+              loadbalancer_ip: loadbalancer_ip,
+              loadbalancer_port: loadbalancer_port,
+              node_name: "kworker#{i}"
+          }
+      end
       workernode.vm.provider :libvirt do |v|
           v.memory = 4096
           v.cpus = 2
@@ -71,10 +84,9 @@ Vagrant.configure(2) do |config|
 
 	# Loadbalancer
   (1..LoadbalancerCount).each do |i|
-        ip = "192.168.0.200"
         config.vm.define "haproxy#{i}" do |loadbalancer|
           loadbalancer.vm.box = "peru/ubuntu-20.04-server-amd64"
-          loadbalancer.vm.network :public_network, :dev => 'br0', :type => 'bridge', ip: ip
+          loadbalancer.vm.network :public_network, :dev => 'br0', :type => 'bridge', ip: loadbalancer_ip
           loadbalancer.vm.hostname = "haproxy#{i}"
           loadbalancer.vm.provision "ansible-commons", type:'ansible' do |ansible|
               ansible.playbook = "commons/playbook.yml"
@@ -82,7 +94,8 @@ Vagrant.configure(2) do |config|
           loadbalancer.vm.provision "nlb", type:'ansible' do |ansible|
               ansible.playbook = "nlb/playbook.yml"
               ansible.extra_vars = {
-  								node_ip: ip,
+  								node_ip: loadbalancer_ip,
+  								node_port: loadbalancer_port,
                   masternodes: MasterNodes,
               }
           end

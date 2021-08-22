@@ -34,7 +34,7 @@ defaults
 	errorfile 504 /etc/haproxy/errors/504.http
 
 frontend k8s
-	bind {{ haproxy_ip }}:6443
+	bind {{ haproxy_ip }}:{{ haproxy_port }}
 	mode tcp
 	default_backend k8s
 

@@ -3,6 +3,7 @@
   become: true
   vars:
     haproxy_ip: "{{ node_ip }}"
+    haproxy_port: "{{ node_port }}"
     masternodes: "{{ masternodes }}"
   vars_files:
     - default.yml
